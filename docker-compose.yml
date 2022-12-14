@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongo-db
+    restart: always
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
+  server:
+    container_name: server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    user: "node"
+    working_dir: /server
+    environment:
+      - DB_URL=mongodb://mongo-db
+    depends_on:
+      - mongodb
+    command: "npm start"
+  client:
+    container_name: client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    user: "node"
+    working_dir: /client
+    depends_on:
+      - server
+    stdin_open: true
+    volumes:
+      - ./client:/client
+      - /client/node_modules
+
+volumes:
+  mongodata:
